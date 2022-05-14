@@ -2,8 +2,7 @@ import io
 import requests
 import streamlit as st
 
-backend = "http://localhost:8000/test"
-
+backend = "http://localhost:8000/"
 
 def main():
     st.set_page_config(
