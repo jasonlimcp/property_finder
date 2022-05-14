@@ -1,4 +1,3 @@
-import io
 import requests
 import streamlit as st
 
@@ -11,7 +10,7 @@ def main():
         layout="wide"
     )
 
-    st.title("Property Finder")
+    st.title("View Property Stats here:")
 
     year = st.radio("Year of Completion", ("2005", "2006"), key="year")
 
