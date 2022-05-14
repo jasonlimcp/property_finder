@@ -1,7 +1,5 @@
 import requests
 import streamlit as st
-import src.utils
-import os
 
 backend = "http://localhost:8000/propnames"
 prop_list = requests.get(backend)
