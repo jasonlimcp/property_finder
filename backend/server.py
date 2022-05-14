@@ -6,22 +6,13 @@ app = FastAPI()
 
 @app.get('/')
 def read_main():
-    return {"msg": "Hello world!"}
-
-
-@app.get('/main')
-def read_main():
-    return {"msg": "Hello Jason!"}
+    return {}
 
 @app.get('/propnames')
 def get_prop_list():
     prop_list = propnames()
-    return prop_list
-
-@app.get('/test')
-def get_test_output(data):
-    return {"msg": "yoyo!" + data}
-
+    prop_list.insert(0,"All") #Add 'All' option
+    return {"lister":prop_list}
 
 if __name__ == "__main__":
     uvicorn.run(app)
