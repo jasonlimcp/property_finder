@@ -1,9 +1,13 @@
 import requests
 import streamlit as st
+import src.utils
+import os
 
-backend = "http://localhost:8000/"
+backend = "http://localhost:8000/propnames"
+prop_list = requests.get(backend)
 
 def main():
+    
     st.set_page_config(
         page_title="Property Finder",
         page_icon="🏡",
@@ -11,11 +15,16 @@ def main():
     )
 
     st.title("View Property Stats here:")
-
-    year = st.radio("Year of Completion", ("2005", "2006"), key="year")
+        
+    st.write(prop_list)
+    
+    propname = st.selectbox(
+        label='Select Property:',
+        options=prop_list
+        )
 
     if st.button("Press Here"):
-        data = requests.get(backend, params={"data": year})
+        data = requests.get(backend, params={"data": propname})
         data_json = data.json()
         st.write(data_json["msg"])
 
