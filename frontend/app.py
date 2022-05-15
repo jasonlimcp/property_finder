@@ -17,7 +17,7 @@ def main():
     
     propname = st.sidebar.selectbox(
         label='Select Property Project',
-        options=prop_list["lister"]
+        options=prop_list["lists"]
         )
 
     with st.sidebar:
@@ -39,11 +39,12 @@ def main():
 
         submit = st.button("Calculate")
 
-
-        #if st.button("Calculate"):
-        #    data = requests.get(backend, params={"data": propname})
-        #    data_json = data.json()
-        #    st.write(data_json["msg"])
+        """
+        if st.button("Calculate"):
+            data = requests.get(backend, params={"data": propname})
+            data_json = data.json()
+            st.write(data_json["msg"])
+        """
 
     if submit == True:
         with st.container():

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 import uvicorn
-from src.utils import propnames
+from src.utils import get_prop_list
 
 app = FastAPI()
 
@@ -9,10 +9,10 @@ def read_main():
     return {}
 
 @app.get('/propnames')
-def get_prop_list():
-    prop_list = propnames()
+def send_prop_list():
+    prop_list = get_prop_list()
     prop_list.insert(0,"All") #Add 'All' option
-    return {"lister":prop_list}
+    return {"lists":prop_list}
 
 if __name__ == "__main__":
     uvicorn.run(app)

@@ -166,6 +166,4 @@ cython_debug/
 
 # End of https://www.toptal.com/developers/gitignore/api/python
 
-backend/src/realis_processed.csv
-backend/src/realis.csv
-tester.ipynb
+jupyter_tester.ipynb
