@@ -1,5 +1,7 @@
 import requests
 import streamlit as st
+import numpy as np
+import pandas as pd
 
 backend = "http://localhost:8000"
 
@@ -35,18 +37,25 @@ def main():
 
         min_year = st.selectbox(
             label = "Properties Bought After",
-            options=['All']+[str(n) for n in range(2000,2022)])
+            options=['All']+[str(n) for n in range(2000,2016)])
 
         submit = st.button("Calculate")
 
-        """
-        if st.button("Calculate"):
-            data = requests.get(backend, params={"data": propname})
-            data_json = data.json()
-            st.write(data_json["msg"])
-        """
+        
+        #if st.button("Calculate"):
+        #    data = requests.get(backend, params={"data": propname})
+        #    data_json = data.json()
+        #    st.write(data_json["msg"])
+        
 
     if submit == True:
+
+        stats = requests.get(
+            backend + '/stats', 
+            params={"propname": propname,"postdist": postal_dist,"propsize_min": prop_size[0],"propsize_max": prop_size[1],"newsaleyear": min_year}).json()
+
+        st.write("The number of properties is ", (stats["stats"]))
+
         with st.container():
             st.write("**You've selected:**")
             st.write("Property Name: "+ propname)
@@ -55,7 +64,9 @@ def main():
             st.write("Year Built From: "+min_year)
     
 
-
+    myimage = requests.get(backend + '/img').content
+    st.image(myimage)
+    
     
 if __name__ == "__main__":
     main()

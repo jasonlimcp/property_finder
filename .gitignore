@@ -167,3 +167,5 @@ cython_debug/
 # End of https://www.toptal.com/developers/gitignore/api/python
 
 jupyter_tester.ipynb
+backend/data/
+tests/test_data/

@@ -1,17 +1,18 @@
 import pandas as pd
-import matplotlib.pyplot as plt
+
 from datetime import datetime
 import os
 
-os.chdir("backend/src")
-df = pd.read_csv('realis.csv')
+os.chdir("backend/data")
+
+realis_data = 'realis.csv'
+df = pd.read_csv(realis_data)
 
 df = df.replace(',','', regex=True)
 df = df.astype({'Transacted Price ($)': 'int64',
                  'Area (SQFT)': 'float64',
                  'Unit Price ($ PSF)': 'int64'
                 })
-
 
 #Cleaning: Remove columns not relevant. Save as df_main
 df_main = df.drop(columns=['Area (SQM)', 
@@ -20,17 +21,20 @@ df_main = df.drop(columns=['Area (SQM)',
                            'Postal Code',
                           'Postal Sector'])
 
+df_main['project_address']= df_main['Project Name']+df_main['Address']
 
 #Create New Sale table
-df_new = df_main.loc[df_main['Type of Sale'] == 'New Sale']
-df_new = df_new.drop(columns=['Type of Sale'])
+df_newsale = df_main.loc[df_main['Type of Sale'] == 'New Sale']
+df_newsale = df_newsale.drop(columns=['Type of Sale'])
+df_newsale['project_address']= df_newsale['Project Name']+df_newsale['Address']
 
 
 #Create Resale Table
 df_resale = df_main.loc[df_main['Type of Sale'].isin(['Resale'])]
-df_resale = df_resale[["Address","Transacted Price ($)", "Unit Price ($ PSF)", "Sale Date"]]
+df_resale = df_resale[["Transacted Price ($)", "Unit Price ($ PSF)", "Sale Date","project_address"]]
 
-df_combine = pd.merge(df_new, df_resale, how = "inner", on = 'Address')
+df_combine = pd.merge(df_newsale, df_resale, how = "inner", on = 'project_address')
+df_combine = df_combine.drop(columns=['project_address'])
 
 df_combine.rename(columns={'Transacted Price ($)_x': 'New Sale Price ($)', 
                            'Unit Price ($ PSF)_x': 'New Sale Price (PSF)',
@@ -41,7 +45,7 @@ df_combine.rename(columns={'Transacted Price ($)_x': 'New Sale Price ($)',
                           }, inplace=True)
 
 
-df_final = df_combine
+df_combine_copy = df_combine
 
 CCR = [9,10,11,1,2,6]
 RCR = [3,4,5,7,8,12,13,14,15,20]
@@ -57,15 +61,16 @@ def segment(x):
     else:
         return 'Null'
 
-df_final['Market Segment'] = df_final.apply(lambda row:
+df_combine_copy['Market Segment'] = df_combine_copy.apply(lambda row:
                                                     segment(row['Postal District'])
                                                     , axis = 1)
 
 
-df_final['New Sale Datetime'] = df_final['New Sale Date'].apply(lambda x: datetime.strptime(x,'%d/%m/%Y'))
-df_final['Resale Datetime'] = df_final['Resale Date'].apply(lambda x: datetime.strptime(x,'%d/%m/%Y'))
-df_final = df_final.drop(columns=['New Sale Date','Resale Date'])
-
+df_combine_copy['New Sale Datetime'] = df_combine_copy['New Sale Date'].apply(lambda x: datetime.strptime(x,'%d/%m/%Y'))
+df_combine_copy['Resale Datetime'] = df_combine_copy['Resale Date'].apply(lambda x: datetime.strptime(x,'%d/%m/%Y'))
+df_combine_copy = df_combine_copy.drop(columns=['New Sale Date','Resale Date'])
+df_combine_copy = df_combine_copy.loc[df_combine_copy['New Sale Datetime'] < df_combine_copy['Resale Datetime']]
+df_final = df_combine_copy
 
 def year_convertor(x):
     y = round(int((x.split()[0]))/365,1)
@@ -86,30 +91,4 @@ df_final['Annualized Growth'] = df_final.apply(lambda row:
                                                     , axis = 1)
 
 
-df_visual = df_final[["Project Name", "Area (SQFT)","Postal District","Market Segment","Property Age (Years)","Price Differential (%)","Annualized Growth"]]
-
-
-df_visual.groupby('Market Segment')['Price Differential (%)'].describe()
-df_visual.groupby('Market Segment')['Annualized Growth'].describe()
-
-
-district_rank = df_visual.groupby('Postal District')['Annualized Growth'].mean()
-district_rank.sort_values(ascending=False)
-
-
-plt.hist(df_visual['Price Differential (%)'], color = '#1f77b4', edgecolor = 'black',
-         bins = int(1/0.01))
-
-plt.title('Range of Capital Gains/Losses')
-plt.xlabel('Price Differential')
-plt.ylabel('Number of Transactions')
-
-
-plt.hist(df_visual['Annualized Growth'], color = '#1f77b4', edgecolor = 'black',
-         bins = int(0.5/0.005))
-
-plt.title('Range of Annualized Growth')
-plt.xlabel('Annualized Growth')
-plt.ylabel('Number of Transactions')
-
-df_final.to_csv('realis_processed.csv')
+df_final.to_csv('realis_processed.csv', index=False)
