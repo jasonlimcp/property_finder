@@ -14,7 +14,6 @@ def main():
     st.title("Analyze Properties Here!")
     
     prop_list = requests.get(backend + '/propnames').json()
-    #prop_list_json = prop_list
     
     propname = st.sidebar.selectbox(
         label='Select Property Project',
