@@ -168,4 +168,5 @@ cython_debug/
 
 jupyter_tester.ipynb
 backend/data/
+frontend/data/
 tests/test_data/
