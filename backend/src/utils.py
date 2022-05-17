@@ -1,33 +1,38 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import io
+from datetime import datetime
+
+'''
+Server Functions
+'''
 
 def get_prop_list(csv_file="data/realis_processed.csv"):
-     """Get property name list from realis_processed.csv
-     csv_file (str): path to processed realist csv file
-     """
-     """
-
-     Args:
-         csv_file (str): _description_. Defaults to "data/realis_processed.csv".
-
-     Returns:
-         _type_: list of property names
-     """
      df = pd.read_csv(csv_file)
      prop_list = df['Project Name'].tolist()
      prop_list = sorted(list(set(prop_list)))
 
      return prop_list
 
-def get_filtered_table(propname,postdist,propsize_min,propsize_max,newsaleyear,csv_file="data/realis_processed.csv"):
+def get_planarea_list(csv_file="data/realis_processed.csv"):
+     df = pd.read_csv(csv_file)
+     planarea_list = df['Planning Area'].tolist()
+     planarea_list = sorted(list(set(planarea_list)))
+
+     return planarea_list
+
+def get_filtered_table(propname,proptype,planarea,propsize_min,propsize_max,newsaleyear,csv_file="data/realis_processed.csv"):
     df = pd.read_csv(csv_file)
     
     if propname != "All":
         df = df.loc[(df['Project Name']==propname)]
-    if postdist != "All":
-        df['Postal District'].astype(int)
-        df = df.loc[(df['Postal District']==int(postdist))]
+
+    if proptype != "All":
+        df = df.loc[(df['Property Type']==proptype)]
+    
+    if planarea != "All":
+        df = df.loc[(df['Planning Area'].isin(planarea.split(",")))]
+
     if newsaleyear != "All":
         df['New Sale Datetime'] = pd.to_datetime(df['New Sale Datetime'])
         df = df.loc[(df['New Sale Datetime'].dt.year>=int(newsaleyear))]
@@ -51,7 +56,7 @@ def get_chart_pricediff(df):
     df_visual['Price Differential (%)'] = df_visual['Price Differential (%)'].apply(lambda x: x*100)
     
     
-    plt.hist(df_visual['Price Differential (%)'], color = '#1f77b4', edgecolor = 'black',
+    plt.hist(df_visual['Price Differential (%)'], color = '#b35900', edgecolor = 'black',
             bins = int(1/0.01))
 
     plt.title('Range of Capital Gains/Losses')
@@ -71,7 +76,7 @@ def get_chart_anngrowth(df):
     df_visual = df.copy()
     df_visual['Annualized Growth'] = df_visual['Annualized Growth'].apply(lambda x: x*100)
 
-    plt.hist(df_visual['Annualized Growth'], color = '#1f77b4', edgecolor = 'black',
+    plt.hist(df_visual['Annualized Growth'], color = '#007399', edgecolor = 'black',
             bins = int(0.5/0.005), range=(df_visual['Annualized Growth'].min(), df_visual['Annualized Growth'].max() if df_visual['Annualized Growth'].max()<=100 else 100))
 
     plt.title('Range of Annualized Growth')
@@ -84,3 +89,93 @@ def get_chart_anngrowth(df):
     chart_anngrowth.seek(0)
 
     return chart_anngrowth
+
+'''
+Data Prep Functions
+'''
+
+def clean_table(df):
+    df = df.replace(',','', regex=True)
+    df = df.astype({'Transacted Price ($)': 'int64',
+                    'Area (SQFT)': 'float64',
+                    'Unit Price ($ PSF)': 'int64'
+                    })
+
+    df = df.loc[df['Type of Area']=='Strata']
+    df= df.replace({'Property Type':{'Apartment' : 'Condominium'}})
+    df['project_address']= df['Project Name']+df['Address']
+
+    return df
+
+def match_newsale_resale(df):
+    #Create New Sale table
+    df_newsale = df.loc[df['Type of Sale'] == 'New Sale']
+    df_newsale = df_newsale.drop(columns=['Type of Sale'])
+    df_newsale['project_address']= df_newsale['Project Name']+df_newsale['Address']
+
+    #Create Resale Table
+    df_resale = df.loc[df['Type of Sale'].isin(['Resale'])]
+    df_resale = df_resale[["Transacted Price ($)", "Unit Price ($ PSF)", "Sale Date","project_address"]]
+
+    df_combine = pd.merge(df_newsale, df_resale, how = "inner", on = 'project_address')
+    df_combine = df_combine.drop(columns=['project_address'])
+
+    df_combine.rename(columns={'Transacted Price ($)_x': 'New Sale Price ($)', 
+                            'Unit Price ($ PSF)_x': 'New Sale Price (PSF)',
+                            'Sale Date_x': 'New Sale Date',
+                            'Transacted Price ($)_y': 'Resale Price ($)',
+                            'Unit Price ($ PSF)_y': 'Resale Price (PSF)',
+                            'Sale Date_y': 'Resale Date'
+                            }, inplace=True)
+    
+    return df_combine
+
+def assign_mktsegment(df):
+    CCR = [9,10,11,1,2,6]
+    RCR = [3,4,5,7,8,12,13,14,15,20]
+    OCR = [16,17,18,19,21,22,23,24,25,26,27,28]
+
+    def segment(x):
+        if x in CCR:
+            return 'CCR'
+        elif x in RCR:
+            return 'RCR'
+        elif x in OCR:
+            return 'OCR'
+        else:
+            return 'Null'
+
+    df['Market Segment'] = df.apply(lambda row:
+                                                        segment(row['Postal District'])
+                                                        , axis = 1)
+
+    return df
+
+def convert_datetimes(df):
+    df['New Sale Datetime'] = df['New Sale Date'].apply(lambda x: datetime.strptime(x,'%d/%m/%Y'))
+    df['Resale Datetime'] = df['Resale Date'].apply(lambda x: datetime.strptime(x,'%d/%m/%Y'))
+    df = df.drop(columns=['New Sale Date','Resale Date'])
+    df = df.loc[df['New Sale Datetime'] < df['Resale Datetime']]
+
+    return df
+
+def add_metrics_cols(df):
+    def year_convertor(x):
+        y = round(int((x.split()[0]))/365,1)
+        return y
+
+    df['Property Age (Years)'] = df.apply(lambda row:
+                                                        year_convertor(str(row['Resale Datetime'] - row['New Sale Datetime']))
+                                                        , axis = 1)
+
+
+    df['Price Differential (%)'] = df.apply(lambda row:
+                                                        (row['Resale Price (PSF)'] - row['New Sale Price (PSF)'])/row['New Sale Price (PSF)']
+                                                        , axis = 1)
+
+
+    df['Annualized Growth'] = df.apply(lambda row:
+                                                        ((1+row['Price Differential (%)'])**(1/row['Property Age (Years)']))-1
+                                                        , axis = 1)
+    
+    return df            

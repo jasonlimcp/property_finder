@@ -5,6 +5,3 @@ def test_get_prop_list():
     mock_prop_list = get_prop_list(mock_data)
     assert isinstance(mock_prop_list, list)
     assert len(mock_prop_list) > 0
-
-
-    
