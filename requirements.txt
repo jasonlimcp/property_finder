@@ -4,3 +4,4 @@ streamlit
 fastapi
 uvicorn
 pytest
+gsheetsdb

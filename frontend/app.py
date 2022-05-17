@@ -1,7 +1,7 @@
 import requests
 import streamlit as st
 
-backend = "http://localhost:8000"
+backend = "http://127.0.0.1:8000"
 
 def main():
     
