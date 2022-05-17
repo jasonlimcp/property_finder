@@ -1,7 +1,7 @@
 import pandas as pd
 from utils import clean_table, match_newsale_resale, assign_mktsegment, convert_datetimes, add_metrics_cols
 
-realis_data = 'backend/data/realis.csv'
+realis_data = 'backend/data/realis.csv' #this file is not stored in Git
 
 df = pd.read_csv(realis_data)
 

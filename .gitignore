@@ -166,7 +166,8 @@ cython_debug/
 
 # End of https://www.toptal.com/developers/gitignore/api/python
 
-jupyter_tester.ipynb
+cloud
+.streamlit/secrets.toml
+jupyter_notes.ipynb
 backend/data/
-frontend/data/
 tests/test_data/
