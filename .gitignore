@@ -170,4 +170,5 @@ cloud
 .streamlit/secrets.toml
 jupyter_notes.ipynb
 backend/data/
+frontend/data/
 tests/test_data/
