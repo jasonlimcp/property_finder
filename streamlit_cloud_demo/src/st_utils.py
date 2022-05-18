@@ -1,8 +1,10 @@
+import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import io
 from datetime import datetime
 
+@st.cache
 def get_prop_list(csv_file="streamlit_cloud_demo/data/realis_processed.csv"):
      df = pd.read_csv(csv_file)
      prop_list = df['Project Name'].tolist()
@@ -10,6 +12,7 @@ def get_prop_list(csv_file="streamlit_cloud_demo/data/realis_processed.csv"):
 
      return prop_list
 
+@st.cache
 def get_planarea_list(csv_file="streamlit_cloud_demo/data/realis_processed.csv"):
      df = pd.read_csv(csv_file)
      planarea_list = df['Planning Area'].tolist()
@@ -17,6 +20,7 @@ def get_planarea_list(csv_file="streamlit_cloud_demo/data/realis_processed.csv")
 
      return planarea_list
 
+@st.cache
 def get_filtered_table(propname,proptype,planarea,propsize_min,propsize_max,newsaleyear,csv_file="streamlit_cloud_demo/data/realis_processed.csv"):
     df = pd.read_csv(csv_file)
     
