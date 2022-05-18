@@ -2,7 +2,7 @@ import io
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 import uvicorn
-from src.utils import get_prop_list,get_planarea_list, get_filtered_table, get_stats, get_chart_pricediff, get_chart_anngrowth
+from src.utils import get_prop_list,get_planarea_list, get_filtered_table, get_stats, get_chart_pricediff, get_chart_anngrowth, get_performers
 
 app = FastAPI()
 
@@ -44,6 +44,22 @@ def send_chartgrowth(propname,proptype,planarea,propsize_min,propsize_max,newsal
         return StreamingResponse(io.BytesIO(chartgrowth.read()), media_type="image/png")
     else:
         return None
+
+@app.get('/performerstop')
+def send_df_performers_top(propname,proptype,planarea,propsize_min,propsize_max,newsaleyear):
+    df = get_filtered_table(propname,proptype,planarea,propsize_min,propsize_max,newsaleyear)
+    df_top = get_performers(df)
+    dict_top = df_top.head(10).fillna(0).to_dict()
+    
+    return {"top_dict":dict_top}
+
+@app.get('/performersbottom')
+def send_df_performers_top(propname,proptype,planarea,propsize_min,propsize_max,newsaleyear):
+    df = get_filtered_table(propname,proptype,planarea,propsize_min,propsize_max,newsaleyear)
+    df_bottom = get_performers(df)
+    dict_bottom = df_bottom.tail(10).fillna(0).to_dict()
+    
+    return {"bottom_dict":dict_bottom}
 
 if __name__ == "__main__":
     uvicorn.run(app)

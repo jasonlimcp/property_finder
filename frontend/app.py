@@ -103,28 +103,45 @@ def main():
             st.success("**Here's how your selection performed:**")
             st.subheader("Out of " + str("{:,}".format(int(count_transactions))) + " transactions")
 
-            result_col1, result_col2, result_col3, result_col4 = st.columns(4)
+            result_avg_col1, result_avg_col2, result_avg_col3 = st.columns(3)
 
-            with result_col1:
+            with result_avg_col1:
                 st.metric(
                 label="Average Profit/Loss",
                 value = str(round(100*(stats['stat_dict']['Price Differential (%)']['mean']),1)) + "%"
                 )
-            with result_col2:
-                st.metric(
-                label="Median Profit/Loss",
-                value = str(round(100*(stats['stat_dict']['Price Differential (%)']['50%']),1)) + "%"
-                )
-            with result_col3:
+            with result_avg_col2:
                 st.metric(
                 label="Average Annualized Gain/Loss",
                 value = str(round(100*(stats['stat_dict']['Annualized Growth']['mean']),1)) + "%"
                 )
-            with result_col4:
+            
+            with result_avg_col3:
+                st.metric(
+                label="Average Years Property Held",
+                value = str(round(stats['stat_dict']['Property Age (Years)']['mean'],1)) + "yrs"
+                )
+            
+            result_med_col1, result_med_col2, result_med_col3 = st.columns(3)
+
+            with result_med_col1:
+                st.metric(
+                label="Median Profit/Loss",
+                value = str(round(100*(stats['stat_dict']['Price Differential (%)']['50%']),1)) + "%"
+                )
+             
+            with result_med_col2:
                 st.metric(
                 label="Median Annualized Gain/Loss",
                 value = str(round(100*(stats['stat_dict']['Annualized Growth']['50%']),1)) + "%"
                     )
+
+            with result_med_col3:
+                st.metric(
+                label="Median Years Property Held",
+                value = str(round(stats['stat_dict']['Property Age (Years)']['50%'],1)) + "yrs"
+                    )
+
 
             with st.spinner('Generating charts...'):
 
@@ -139,6 +156,20 @@ def main():
                         ).content
 
                 st.image([chart1,chart2],width=600)
+
+            df_top = requests.get(
+                backend + '/performerstop', 
+                params={"propname": propname,"proptype": property_type,"planarea": planarea,"propsize_min": prop_size_min,"propsize_max": prop_size_max,"newsaleyear": min_year}).json()
+            
+            with st.expander("Expand to view Top Performers for your selection (by Median Annualized Gain)"):
+                st.dataframe(df_top['top_dict'], height = 350)
+            
+            df_bottom = requests.get(
+                backend + '/performersbottom', 
+                params={"propname": propname,"proptype": property_type,"planarea": planarea,"propsize_min": prop_size_min,"propsize_max": prop_size_max,"newsaleyear": min_year}).json()
+            
+            with st.expander("Expand to view Bottom Performers for your selection (by Median Annualized Gain)"):
+                st.dataframe(df_bottom['bottom_dict'], height = 350)
             
         else:
             st.warning("No transactions found.")

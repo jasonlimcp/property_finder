@@ -43,8 +43,8 @@ def get_filtered_table(propname,proptype,planarea,propsize_min,propsize_max,news
     return df
 
 def get_stats(df):
-    df.astype({'Price Differential (%)': 'float', 'Annualized Growth': 'float'})
-    df_stats = df[['Price Differential (%)','Annualized Growth']].describe()
+    df.astype({'Price Differential (%)': 'float', 'Annualized Growth': 'float','Property Age (Years)':'float'})
+    df_stats = df[['Price Differential (%)','Annualized Growth','Property Age (Years)']].describe()
     dict_stats = df_stats.fillna(0).to_dict()
     
     return dict_stats
@@ -89,6 +89,32 @@ def get_chart_anngrowth(df):
     chart_anngrowth.seek(0)
 
     return chart_anngrowth
+
+def get_performers(df):
+    df = df.groupby(['Project Name','Property Type','Planning Area']).agg(
+        {
+        'Project Name':['count'],
+        'Annualized Growth': ['median'],
+        'Resale Price (PSF)':['median'],
+        'Resale Datetime':['max']
+        })
+
+    df.columns = df.columns.map('_'.join)
+    df = df.reset_index()
+    df = df.rename(
+        {'Project Name_count': 'No. of Resale Transactions',
+        'Annualized Growth_median': 'Median Annualized Growth (%)',
+        'Resale Price (PSF)_median': 'Median Resale Price',
+        'Resale Datetime_max': 'Last Resale Transaction',
+        }, axis=1)
+
+    df["Median Annualized Growth (%)"] = df["Median Annualized Growth (%)"].apply(lambda x: round(x*100,1))
+    df["Median Resale Price"] = df["Median Resale Price"].apply(lambda x: int(x))
+    df["Last Resale Transaction"] = df["Last Resale Transaction"].apply(lambda x: str(x)[0:4])
+    df = df.sort_values(by=['Median Annualized Growth (%)'],ascending=False)
+    df = df.set_index('Project Name')
+
+    return df
 
 '''
 Data Prep Functions
