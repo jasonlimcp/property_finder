@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import io
 from datetime import datetime
+import re
 
 def get_prop_list(df):
      prop_list = df['Project Name'].tolist()
@@ -103,7 +104,7 @@ def get_performers(df):
 
     df["Median Annualized Growth (%)"] = df["Median Annualized Growth (%)"].apply(lambda x: round(x*100,1))
     df["Median Resale Price"] = df["Median Resale Price"].apply(lambda x: int(x))
-    df["Last Resale Transaction"] = df["Last Resale Transaction"].apply(lambda x: str(x)[0:4])
+    df["Last Resale Transaction"] = df["Last Resale Transaction"].apply(lambda x: re.search(r'\b\d{4}\b', x).group())
     df = df.sort_values(by=['Median Annualized Growth (%)'],ascending=False)
     df = df.set_index('Project Name')
 
