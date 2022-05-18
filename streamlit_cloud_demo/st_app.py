@@ -11,8 +11,7 @@ def main():
     )
 
     st.title("Through The Looking Glass: Singapore's Property Landscape")
-    st.warning("_Note: This site is still undergoing development. We are accepting suggestions for additional data display elements - contact whoever sent you this URL._")
-
+    
     @st.cache
     def read_data(csv_file="streamlit_cloud_demo/data/realis_processed.csv"):
         df = pd.read_csv(csv_file)
@@ -72,6 +71,7 @@ def main():
         submit = st.form_submit_button("See Results")
 
     if submit==False:
+        st.warning("_Note: This site is still undergoing development. We are accepting suggestions for additional data display elements - contact whoever sent you this URL._")
         st.image('streamlit_cloud_demo/data/hk2019r.jpg')
         st.caption("Image Credits: J.Lim 2019")
         st.info("Select parameters on the left to get started, or simply click **See Results**!")
