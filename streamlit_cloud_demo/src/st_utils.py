@@ -3,21 +3,21 @@ import matplotlib.pyplot as plt
 import io
 from datetime import datetime
 
-def get_prop_list(csv_file="data/realis_processed.csv"):
+def get_prop_list(csv_file="streamlit_cloud_demo/data/realis_processed.csv"):
      df = pd.read_csv(csv_file)
      prop_list = df['Project Name'].tolist()
      prop_list = sorted(list(set(prop_list)))
 
      return prop_list
 
-def get_planarea_list(csv_file="data/realis_processed.csv"):
+def get_planarea_list(csv_file="streamlit_cloud_demo/data/realis_processed.csv"):
      df = pd.read_csv(csv_file)
      planarea_list = df['Planning Area'].tolist()
      planarea_list = sorted(list(set(planarea_list)))
 
      return planarea_list
 
-def get_filtered_table(propname,proptype,planarea,propsize_min,propsize_max,newsaleyear,csv_file="data/realis_processed.csv"):
+def get_filtered_table(propname,proptype,planarea,propsize_min,propsize_max,newsaleyear,csv_file="streamlit_cloud_demo/data/realis_processed.csv"):
     df = pd.read_csv(csv_file)
     
     if propname != "All":

@@ -64,7 +64,7 @@ def main():
         submit = st.form_submit_button("See Results")
 
     if submit==False:
-        st.image('data/hk2019r.jpg')
+        st.image('streamlit_cloud_demo/data/hk2019r.jpg')
         st.caption("Image Credits: J.Lim 2019")
         st.info("Select parameters on the left to get started, or simply click **See Results**!")
 
