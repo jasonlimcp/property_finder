@@ -3,10 +3,6 @@ import matplotlib.pyplot as plt
 import io
 from datetime import datetime
 
-'''
-Server Functions
-'''
-
 def get_prop_list(csv_file="data/realis_processed.csv"):
      df = pd.read_csv(csv_file)
      prop_list = df['Project Name'].tolist()
@@ -115,93 +111,3 @@ def get_performers(df):
     df = df.set_index('Project Name')
 
     return df
-
-'''
-Data Prep Functions
-'''
-
-def clean_table(df):
-    df = df.replace(',','', regex=True)
-    df = df.astype({'Transacted Price ($)': 'int64',
-                    'Area (SQFT)': 'float64',
-                    'Unit Price ($ PSF)': 'int64'
-                    })
-
-    df = df.loc[df['Type of Area']=='Strata']
-    df= df.replace({'Property Type':{'Apartment' : 'Condominium'}})
-    df['project_address']= df['Project Name']+df['Address']
-
-    return df
-
-def match_newsale_resale(df):
-    #Create New Sale table
-    df_newsale = df.loc[df['Type of Sale'] == 'New Sale']
-    df_newsale = df_newsale.drop(columns=['Type of Sale'])
-    df_newsale['project_address']= df_newsale['Project Name']+df_newsale['Address']
-
-    #Create Resale Table
-    df_resale = df.loc[df['Type of Sale'].isin(['Resale'])]
-    df_resale = df_resale[["Transacted Price ($)", "Unit Price ($ PSF)", "Sale Date","project_address"]]
-
-    df_combine = pd.merge(df_newsale, df_resale, how = "inner", on = 'project_address')
-    df_combine = df_combine.drop(columns=['project_address'])
-
-    df_combine.rename(columns={'Transacted Price ($)_x': 'New Sale Price ($)', 
-                            'Unit Price ($ PSF)_x': 'New Sale Price (PSF)',
-                            'Sale Date_x': 'New Sale Date',
-                            'Transacted Price ($)_y': 'Resale Price ($)',
-                            'Unit Price ($ PSF)_y': 'Resale Price (PSF)',
-                            'Sale Date_y': 'Resale Date'
-                            }, inplace=True)
-    
-    return df_combine
-
-def assign_mktsegment(df):
-    CCR = [9,10,11,1,2,6]
-    RCR = [3,4,5,7,8,12,13,14,15,20]
-    OCR = [16,17,18,19,21,22,23,24,25,26,27,28]
-
-    def segment(x):
-        if x in CCR:
-            return 'CCR'
-        elif x in RCR:
-            return 'RCR'
-        elif x in OCR:
-            return 'OCR'
-        else:
-            return 'Null'
-
-    df['Market Segment'] = df.apply(lambda row:
-                                                        segment(row['Postal District'])
-                                                        , axis = 1)
-
-    return df
-
-def convert_datetimes(df):
-    df['New Sale Datetime'] = df['New Sale Date'].apply(lambda x: datetime.strptime(x,'%d/%m/%Y'))
-    df['Resale Datetime'] = df['Resale Date'].apply(lambda x: datetime.strptime(x,'%d/%m/%Y'))
-    df = df.drop(columns=['New Sale Date','Resale Date'])
-    df = df.loc[df['New Sale Datetime'] < df['Resale Datetime']]
-
-    return df
-
-def add_metrics_cols(df):
-    def year_convertor(x):
-        y = round(int((x.split()[0]))/365,1)
-        return y
-
-    df['Property Age (Years)'] = df.apply(lambda row:
-                                                        year_convertor(str(row['Resale Datetime'] - row['New Sale Datetime']))
-                                                        , axis = 1)
-
-
-    df['Price Differential (%)'] = df.apply(lambda row:
-                                                        (row['Resale Price (PSF)'] - row['New Sale Price (PSF)'])/row['New Sale Price (PSF)']
-                                                        , axis = 1)
-
-
-    df['Annualized Growth'] = df.apply(lambda row:
-                                                        ((1+row['Price Differential (%)'])**(1/row['Property Age (Years)']))-1
-                                                        , axis = 1)
-    
-    return df            

@@ -1,20 +1,21 @@
-import requests
 import streamlit as st
-
-backend = "http://127.0.0.1:8000"
+from src.st_utils import get_prop_list,get_planarea_list, get_filtered_table, get_stats, get_chart_pricediff, get_chart_anngrowth, get_performers
 
 def main():
     
     st.set_page_config(
         page_title="Property Finder",
-        page_icon="🏡",
+        page_icon="🏙",
         layout="wide"
     )
 
-    st.title("Magnifying Glass: Singapore Property Landscape")
-    
-    prop_list = requests.get(backend + '/propnames').json()
-    planarea_list = requests.get(backend + '/planningareas').json()
+    st.title("Through The Looking Glass: Singapore's Property Landscape")
+    st.warning("_Note: This site is still undergoing development. We are accepting suggestions for additional data display elements - contact whoever sent you this URL._")
+
+    prop_list = get_prop_list()
+    prop_list.insert(0,"All")
+
+    planarea_list = get_planarea_list()
     
     form = st.sidebar.form("form", clear_on_submit=True)
     with form:
@@ -23,8 +24,8 @@ def main():
 
         propname = st.selectbox(
         label='Select Property Project',
-        options=prop_list["proplists"],
-        help = "If searching for a specific property, do not select Property Type and Planning Area!"
+        options=prop_list,
+        help = "If searching for a specific property, do not select Property Type or Planning Area!"
         )
 
         property_type = st.selectbox(
@@ -34,7 +35,7 @@ def main():
 
         planarea = st.multiselect(
         label='Select Planning Area',
-        options=planarea_list["planlists"],
+        options=planarea_list,
         help = "Optional; Multiple Areas can be selected"
         )
 
@@ -64,7 +65,7 @@ def main():
 
     if submit==False:
         st.image('data/hk2019r.jpg')
-        st.caption("Image Credits: Jason Lim 2019")
+        st.caption("Image Credits: J.Lim 2019")
         st.info("Select parameters on the left to get started, or simply click **See Results**!")
 
     if submit == True:
@@ -92,11 +93,10 @@ def main():
             st.subheader(min_year)
         
         with st.spinner('Retrieving relevant transactions...'):
-            stats = requests.get(
-                backend + '/stats', 
-                params={"propname": propname,"proptype": property_type,"planarea": planarea,"propsize_min": prop_size_min,"propsize_max": prop_size_max,"newsaleyear": min_year}).json()
-
-        count_transactions = stats['stat_dict']['Price Differential (%)']['count']
+            df = get_filtered_table(propname,property_type,planarea,prop_size_min,prop_size_max,min_year)
+            stats = get_stats(df)
+        
+        count_transactions = stats['Price Differential (%)']['count']
         
         if count_transactions > 0:
             
@@ -108,18 +108,18 @@ def main():
             with result_avg_col1:
                 st.metric(
                 label="Average Profit/Loss",
-                value = str(round(100*(stats['stat_dict']['Price Differential (%)']['mean']),1)) + "%"
+                value = str(round(100*(stats['Price Differential (%)']['mean']),1)) + "%"
                 )
             with result_avg_col2:
                 st.metric(
                 label="Average Annualized Gain/Loss",
-                value = str(round(100*(stats['stat_dict']['Annualized Growth']['mean']),1)) + "%"
+                value = str(round(100*(stats['Annualized Growth']['mean']),1)) + "%"
                 )
             
             with result_avg_col3:
                 st.metric(
                 label="Average Years Property Held",
-                value = str(round(stats['stat_dict']['Property Age (Years)']['mean'],1)) + "yrs"
+                value = str(round(stats['Property Age (Years)']['mean'],1)) + "yrs"
                 )
             
             result_med_col1, result_med_col2, result_med_col3 = st.columns(3)
@@ -127,52 +127,44 @@ def main():
             with result_med_col1:
                 st.metric(
                 label="Median Profit/Loss",
-                value = str(round(100*(stats['stat_dict']['Price Differential (%)']['50%']),1)) + "%"
+                value = str(round(100*(stats['Price Differential (%)']['50%']),1)) + "%"
                 )
              
             with result_med_col2:
                 st.metric(
                 label="Median Annualized Gain/Loss",
-                value = str(round(100*(stats['stat_dict']['Annualized Growth']['50%']),1)) + "%"
+                value = str(round(100*(stats['Annualized Growth']['50%']),1)) + "%"
                     )
 
             with result_med_col3:
                 st.metric(
                 label="Median Years Property Held",
-                value = str(round(stats['stat_dict']['Property Age (Years)']['50%'],1)) + "yrs"
+                value = str(round(stats['Property Age (Years)']['50%'],1)) + "yrs"
                     )
 
 
             with st.spinner('Generating charts...'):
 
-                chart1= requests.get(
-                        backend + '/chartprice',
-                        params={"propname": propname,"proptype": property_type,"planarea": planarea,"propsize_min": prop_size_min,"propsize_max": prop_size_max,"newsaleyear": min_year}
-                        ).content
+                chart1= get_chart_pricediff(df)
 
-                chart2= requests.get(
-                        backend + '/chartgrowth',
-                        params={"propname": propname,"proptype": property_type,"planarea": planarea,"propsize_min": prop_size_min,"propsize_max": prop_size_max,"newsaleyear": min_year}
-                        ).content
+                chart2= get_chart_anngrowth(df)
 
                 st.image([chart1,chart2],width=600)
 
-            df_top = requests.get(
-                backend + '/performerstop', 
-                params={"propname": propname,"proptype": property_type,"planarea": planarea,"propsize_min": prop_size_min,"propsize_max": prop_size_max,"newsaleyear": min_year}).json()
+            df_top = get_performers(df)
+            df_top = df_top.head(10).fillna(0)
             
             with st.expander("Expand to view Top Performers for your selection (by Median Annualized Gain)"):
-                st.dataframe(df_top['top_dict'], height = 350)
+                st.dataframe(df_top, height = 350)
             
-            df_bottom = requests.get(
-                backend + '/performersbottom', 
-                params={"propname": propname,"proptype": property_type,"planarea": planarea,"propsize_min": prop_size_min,"propsize_max": prop_size_max,"newsaleyear": min_year}).json()
+            df_bottom = get_performers(df)
+            df_bottom = df_bottom.tail(10).fillna(0).to_dict()
             
             with st.expander("Expand to view Bottom Performers for your selection (by Median Annualized Gain)"):
-                st.dataframe(df_bottom['bottom_dict'], height = 350)
+                st.dataframe(df_bottom, height = 350)
             
         else:
-            st.warning("No transactions found.")
+            st.warning("No transactions found matching your selections.")
     
 if __name__ == "__main__":
     main()

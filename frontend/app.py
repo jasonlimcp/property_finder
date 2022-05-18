@@ -11,7 +11,7 @@ def main():
         layout="wide"
     )
 
-    st.title("Magnifying Glass: Singapore Property Landscape")
+    st.title("Through The Looking Glass: Singapore's Property Landscape")
     
     prop_list = requests.get(backend + '/propnames').json()
     planarea_list = requests.get(backend + '/planningareas').json()
@@ -24,7 +24,7 @@ def main():
         propname = st.selectbox(
         label='Select Property Project',
         options=prop_list["proplists"],
-        help = "If searching for a specific property, do not select Property Type and Planning Area!"
+        help = "If searching for a specific property, do not select Property Type or Planning Area!"
         )
 
         property_type = st.selectbox(
