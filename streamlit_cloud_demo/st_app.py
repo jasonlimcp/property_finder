@@ -1,5 +1,6 @@
 import streamlit as st
 from src.st_utils import get_prop_list,get_planarea_list, get_filtered_table, get_stats, get_chart_pricediff, get_chart_anngrowth, get_performers
+import pandas as pd
 
 def main():
     
@@ -12,10 +13,17 @@ def main():
     st.title("Through The Looking Glass: Singapore's Property Landscape")
     st.warning("_Note: This site is still undergoing development. We are accepting suggestions for additional data display elements - contact whoever sent you this URL._")
 
-    prop_list = get_prop_list()
+    @st.cache
+    def read_data(csv_file="streamlit_cloud_demo/data/realis_processed.csv"):
+        df = pd.read_csv(csv_file)
+        return df
+
+    df_realis = read_data()
+
+    prop_list = get_prop_list(df_realis)
     prop_list.insert(0,"All")
 
-    planarea_list = get_planarea_list()
+    planarea_list = get_planarea_list(df_realis)
     
     form = st.sidebar.form("form", clear_on_submit=True)
     with form:
@@ -93,7 +101,7 @@ def main():
             st.subheader(min_year)
         
         with st.spinner('Retrieving relevant transactions...'):
-            df = get_filtered_table(propname,property_type,planarea,prop_size_min,prop_size_max,min_year)
+            df = get_filtered_table(propname,property_type,planarea,prop_size_min,prop_size_max,min_year,df_realis)
             stats = get_stats(df)
         
         count_transactions = stats['Price Differential (%)']['count']
