@@ -12,7 +12,6 @@ def main():
 
     st.title("Through The Looking Glass: Singapore's Property Landscape")
     
-    @st.cache
     def read_data(csv_file="streamlit_cloud_demo/data/realis_processed.csv"):
         df = pd.read_csv(csv_file)
         return df
