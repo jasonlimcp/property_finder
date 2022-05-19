@@ -165,8 +165,9 @@ def main():
                 st.dataframe(df_top, height = 350)
             
             df_bottom = get_performers(df)
-            df_bottom = df_bottom.tail(10).fillna(0).to_dict()
-            
+            df_bottom = df_bottom.tail(10).fillna(0)
+            df_bottom = df_bottom.sort_values(by=['Median Annualized Growth (%)'],ascending=True).to_dict()
+                        
             with st.expander("Expand to view Bottom Performers for your selection (by Median Annualized Gain)"):
                 st.dataframe(df_bottom, height = 350)
             
