@@ -19,12 +19,15 @@ _To be Completed_
 #### **Language and Formatting**
 + Context for report: number of properties for X transactions, property built year (LF01)
 
-#### **Display Elements**
+#### **Display and Interactive Elements**
 + Plotly charts replacing Matplotlib images (D01)
++ Breakdown by District, Market Segment (D02)
++ Filter by Sales price (D03)
 
 #### **Features**
 + Add FAQ section (F01)
 + Trend Charts for past transactions (F02)
++ Multipage view for tools (F03)
 
 #### **Source Data**
 + Transactions for resale-resale sales (currently just New Sale-Resale) (SD01)
