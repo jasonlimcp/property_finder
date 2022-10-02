@@ -9,6 +9,7 @@ Server Functions
 '''
 
 def get_prop_list(csv_file="data/realis_processed.csv"):
+     '''Reads from source data and outputs list of all Project names'''
      df = pd.read_csv(csv_file)
      prop_list = df['Project Name'].tolist()
      prop_list = sorted(list(set(prop_list)))
@@ -16,6 +17,7 @@ def get_prop_list(csv_file="data/realis_processed.csv"):
      return prop_list
 
 def get_planarea_list(csv_file="data/realis_processed.csv"):
+     '''Reads from source data and outputs list of all Planning Area names'''
      df = pd.read_csv(csv_file)
      planarea_list = df['Planning Area'].tolist()
      planarea_list = sorted(list(set(planarea_list)))
@@ -23,6 +25,7 @@ def get_planarea_list(csv_file="data/realis_processed.csv"):
      return planarea_list
 
 def get_filtered_table(propname,proptype,planarea,propsize_min,propsize_max,newsaleyear,csv_file="data/realis_processed.csv"):
+    '''Filters the source table to user-selected parameters'''
     df = pd.read_csv(csv_file)
     
     if propname != "All":
@@ -44,6 +47,7 @@ def get_filtered_table(propname,proptype,planarea,propsize_min,propsize_max,news
     return df
 
 def get_stats(df):
+    '''Describe statistics of the filtered table e.g. count, mean, median gain/loss'''
     df.astype({'Price Differential (%)': 'float', 'Annualized Growth': 'float','Property Age (Years)':'float'})
     df_stats = df[['Price Differential (%)','Annualized Growth','Property Age (Years)']].describe()
     dict_stats = df_stats.fillna(0).to_dict()
@@ -51,7 +55,7 @@ def get_stats(df):
     return dict_stats
 
 def get_chart_pricediff(df):
-    
+    '''Generate PyPlot histogram of Price Differential column'''
     df = df[["Project Name", "Area (SQFT)","Postal District","Market Segment","Property Age (Years)","Price Differential (%)"]]
     df_visual = df.copy()
     df_visual['Price Differential (%)'] = df_visual['Price Differential (%)'].apply(lambda x: x*100)
@@ -72,7 +76,7 @@ def get_chart_pricediff(df):
     return chart_pricediff
 
 def get_chart_anngrowth(df):
-    
+    '''Generate PyPlot histogram of Annualized Growth column'''
     df = df[["Project Name", "Area (SQFT)","Postal District","Market Segment","Property Age (Years)","Annualized Growth"]]
     df_visual = df.copy()
     df_visual['Annualized Growth'] = df_visual['Annualized Growth'].apply(lambda x: x*100)
@@ -92,6 +96,7 @@ def get_chart_anngrowth(df):
     return chart_anngrowth
 
 def get_performers(df):
+    '''Aggregates filtered table to get (to be continued)'''
     df = df.groupby(['Project Name','Property Type','Planning Area']).agg(
         {
         'Project Name':['count'],

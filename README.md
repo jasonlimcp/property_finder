@@ -13,6 +13,9 @@ _To be Completed_
 
 ### <ins>Planned Change Pipeline</ins>
 
+#### **Refactoring**
++ Add docstrings for all functions and retire streamlit_cloud_demo app (R01)
+
 #### **Language and Formatting**
 + Context for report: number of properties for X transactions, property built year (LF01)
 
@@ -30,9 +33,10 @@ _To be Completed_
 + Deployment of server to Heroku via FastAPI (A01)
 
 ### <ins>Backlog</ins>
-1. A01
-2. SD01
-3. F02
-4. D01
-5. LF01
-6. F01
+1. R01
+2. A01
+3. SD01
+4. F02
+5. D01
+6. LF01
+7. F01
